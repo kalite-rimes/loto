@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Étoiles d'Or - Numéros chance</title>
+<meta name="description" content="Générateur de numéros aléatoires : 5 numéros et 2 étoiles, en un seul geste. Divertissement uniquement.">
+<meta name="theme-color" content="#0E1319">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Étoiles d'Or">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  :root {
+    --bg: #0E1319;
+    --gold: #E0B04A;
+    --gold-light: #F3D58A;
+    --text: #EEF2F6;
+    --muted: #8F9BAA;
+    --on-gold: #2E2410;
+    --ink: #1F1809;
+    --star-bg: #1B1406;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    min-height: 100dvh;
+    background: radial-gradient(circle at 50% 42%, #1B2634 0%, var(--bg) 70%) fixed, var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+  }
+  main {
+    width: 100%;
+    max-width: 460px;
+    min-height: 100dvh;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(20px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: .2em;
+    color: var(--gold-light);
+  }
+  .sub { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+  .grow { flex: 1 1 0; min-height: 12px; }
+
+  .panel {
+    width: 100%;
+    padding: 20px 16px 24px;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 244, 205, .55);
+    background: linear-gradient(135deg, #D9BE82, #B89A5E, #E6D09C, #F6E6AE, #D4B876, #B8995C);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .45);
+  }
+  .rule {
+    height: 2px;
+    margin-bottom: 18px;
+    background: linear-gradient(90deg, transparent, rgba(107, 81, 22, .7), transparent);
+  }
+  .label { font-size: 11px; letter-spacing: .2em; color: var(--on-gold); }
+  .row { display: flex; justify-content: center; gap: 8px; padding-top: 10px; }
+  .row + .label { margin-top: 20px; }
+  .ball {
+    --size: min(60px, calc((100vw - 48px - 32px) / 5 - 8px));
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: calc(var(--size) * .38);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    background: rgba(255, 255, 255, .18);
+    border: 2px solid var(--on-gold);
+    transition: transform .12s ease;
+  }
+  .ball.star {
+    color: var(--gold-light);
+    background: var(--star-bg);
+    border-color: var(--star-bg);
+  }
+  .ball.pop { transform: scale(1.18); }
+  .ball.spin { transform: scaleY(.9); }
+
+  #draw {
+    width: 160px;
+    height: 160px;
+    border: 0;
+    border-radius: 50%;
+    font: inherit;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #2A1E06;
+    cursor: pointer;
+    background: linear-gradient(135deg, #FFF0B8, #F3D58A, #D9A93E, #F0CF7C, #B8892B);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .55), inset 0 2px 0 rgba(255, 255, 255, .45);
+    transition: transform .1s ease, opacity .15s ease;
+  }
+  #draw:active { transform: scale(.94); }
+  #draw:disabled { opacity: .55; cursor: default; }
+  #draw:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+
+  .legal { margin: 0; font-size: 11px; line-height: 1.45; color: var(--muted); }
+  .links { margin-top: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; font-size: 12px; }
+  .links a, .links button {
+    color: var(--gold-light);
+    background: none;
+    border: 0;
+    padding: 4px 0;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .links [hidden] { display: none; }
+
+  dialog {
+    max-width: 380px;
+    width: calc(100% - 40px);
+    border: 1px solid #2A3543;
+    border-radius: 18px;
+    background: #161D26;
+    color: var(--text);
+    padding: 22px 20px 18px;
+    text-align: left;
+  }
+  dialog::backdrop { background: rgba(0, 0, 0, .65); }
+  dialog h2 { margin: 0 0 10px; font-size: 17px; color: var(--gold-light); }
+  dialog ol { margin: 0 0 16px; padding-left: 20px; font-size: 14px; line-height: 1.6; }
+  dialog button {
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    padding: 12px;
+    font: inherit;
+    font-weight: 700;
+    color: #2A1E06;
+    background: linear-gradient(135deg, #F3D58A, #D9A93E);
+    cursor: pointer;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ball, #draw { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>ÉTOILES D'OR</h1>
+  <p class="sub">Générateur de combinaisons aléatoires</p>
+
+  <div class="grow"></div>
+
+  <section class="panel" aria-label="Combinaison">
+    <div class="rule"></div>
+    <div class="label">NUMÉROS</div>
+    <div class="row" id="numbers" role="img" aria-label="Cinq numéros"></div>
+    <div class="label">ÉTOILES</div>
+    <div class="row" id="stars" role="img" aria-label="Deux étoiles"></div>
+  </section>
+
+  <div class="grow"></div>
+
+  <button id="draw" type="button">TIRER</button>
+  <div class="sr" id="live" aria-live="polite" style="position:absolute;left:-9999px"></div>
+
+  <div class="grow"></div>
+
+  <p class="legal">
+    Divertissement uniquement : cette application génère des numéros au hasard,
+    ne prédit aucun résultat et n'augmente pas vos chances de gagner.
+    Elle n'est affiliée à aucune loterie ni à aucun opérateur de jeux.
+    Jouer comporte des risques : endettement, isolement, dépendance.
+  </p>
+
+  <nav class="links" aria-label="Liens">
+    <button id="install" type="button" hidden>Installer l'application</button>
+    <a id="play" href="https://play.google.com/store/apps/details?id=com.demirinaser.etoilesdor" hidden>Version Android (Google Play)</a>
+    <a href="../">Confidentialité</a>
+  </nav>
+</main>
+
+<dialog id="help">
+  <h2 id="help-title">Installer l'application</h2>
+  <ol id="help-steps"></ol>
+  <button id="help-close" type="button">Compris</button>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+  const NUMBER_COUNT = 5, NUMBER_MAX = 50, STAR_COUNT = 2, STAR_MAX = 12;
+  const SPIN_TICK_MS = 55, FIRST_STOP_MS = 900, STOP_STEP_MS = 330;
+
+  const $ = (id) => document.getElementById(id);
+  const draw = $('draw');
+  const balls = [];
+  const fmt = (n) => String(n).padStart(2, '0');
+
+  // Tirage uniforme sans biais (rejet) via l'aléa cryptographique du navigateur.
+  function randInt(max) {
+    const limit = Math.floor(0x100000000 / max) * max;
+    const buf = new Uint32Array(1);
+    do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
+    return (buf[0] % max) + 1;
+  }
+  function pickDistinct(count, max) {
+    const set = new Set();
+    while (set.size < count) set.add(randInt(max));
+    return [...set].sort((a, b) => a - b);
+  }
+
+  function makeBall(parent, isStar) {
+    const el = document.createElement('div');
+    el.className = 'ball' + (isStar ? ' star' : '');
+    el.textContent = '?';
+    parent.appendChild(el);
+    balls.push({ el, max: isStar ? STAR_MAX : NUMBER_MAX });
+  }
+  for (let i = 0; i < NUMBER_COUNT; i++) makeBall($('numbers'), false);
+  for (let i = 0; i < STAR_COUNT; i++) makeBall($('stars'), true);
+
+  const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
+  let spinning = false;
+
+  function startSpin() {
+    if (spinning) return;
+    spinning = true;
+    draw.disabled = true;
+    buzz(15);
+
+    const result = [...pickDistinct(NUMBER_COUNT, NUMBER_MAX), ...pickDistinct(STAR_COUNT, STAR_MAX)];
+    const start = performance.now();
+    let stopped = 0;
+
+    balls.forEach((b, index) => {
+      const stopAt = FIRST_STOP_MS + index * STOP_STEP_MS;
+      const tick = () => {
+        if (performance.now() - start >= stopAt) {
+          b.el.textContent = fmt(result[index]);
+          b.el.classList.remove('spin');
+          b.el.classList.add('pop');
+          setTimeout(() => b.el.classList.remove('pop'), 130);
+          buzz(8);
+          if (++stopped === balls.length) finish(result);
+        } else {
+          b.el.textContent = fmt(randInt(b.max));
+          b.el.classList.toggle('spin');
+          setTimeout(tick, SPIN_TICK_MS);
+        }
+      };
+      tick();
+    });
+  }
+
+  function finish(result) {
+    spinning = false;
+    draw.disabled = false;
+    const nums = result.slice(0, NUMBER_COUNT).map(fmt).join(', ');
+    const stars = result.slice(NUMBER_COUNT).map(fmt).join(', ');
+    $('live').textContent = 'Numéros : ' + nums + '. Étoiles : ' + stars + '.';
+  }
+  draw.addEventListener('click', startSpin);
+
+  // ---------------------------------------------------------- Installation
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /android/i.test(ua);
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const installBtn = $('install');
+  let deferredPrompt = null;
+
+  if (isAndroid && !standalone) $('play').hidden = false;
+
+  function showHelp(title, steps) {
+    $('help-title').textContent = title;
+    $('help-steps').innerHTML = steps.map((s) => '<li>' + s + '</li>').join('');
+    const d = $('help');
+    if (typeof d.showModal === 'function') d.showModal(); else alert(title + '\n\n' + steps.join('\n').replace(/<[^>]+>/g, ''));
+  }
+  $('help-close').addEventListener('click', () => $('help').close());
+
+  if (!standalone) {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.hidden = false;
+    });
+    window.addEventListener('appinstalled', () => { installBtn.hidden = true; deferredPrompt = null; });
+
+    if (isIOS) {
+      installBtn.hidden = false;
+      installBtn.addEventListener('click', () => showHelp('Installer sur iPhone / iPad', [
+        'Ouvrez cette page dans <b>Safari</b>.',
+        'Touchez le bouton <b>Partager</b> (le carré avec une flèche vers le haut).',
+        'Choisissez <b>Sur l\'écran d\'accueil</b>, puis <b>Ajouter</b>.'
+      ]));
+    } else {
+      installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          await deferredPrompt.userChoice;
+          deferredPrompt = null;
+          installBtn.hidden = true;
+        } else {
+          showHelp('Installer l\'application', [
+            'Ouvrez le menu du navigateur (<b>⋮</b> ou <b>⋯</b>).',
+            'Choisissez <b>Installer l\'application</b> ou <b>Ajouter à l\'écran d\'accueil</b>.',
+            'Confirmez : l\'icône Étoiles d\'Or apparaît sur votre écran.'
+          ]);
+        }
+      });
+      // Sur mobile sans événement d'installation (ex. Firefox), on garde l'aide manuelle.
+      if (isAndroid) installBtn.hidden = false;
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
