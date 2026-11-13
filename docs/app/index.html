@@ -150,8 +150,44 @@
     background: linear-gradient(135deg, #F3D58A, #D9A93E);
     cursor: pointer;
   }
+  .mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+  }
+  .mode input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .track {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    border-radius: 13px;
+    background: #2A3543;
+    transition: background .15s ease;
+    flex: none;
+  }
+  .track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #8F9BAA;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .mode input:checked + .track { background: #6B5116; }
+  .mode input:checked + .track::after { transform: translateX(18px); background: var(--gold-light); }
+  .mode input:focus-visible + .track { outline: 3px solid #fff; outline-offset: 3px; }
+  .mode-note { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+  .mode-note[hidden] { display: none; }
   @media (prefers-reduced-motion: reduce) {
-    .ball, #draw { transition: none; }
+    .ball, #draw, .track, .track::after { transition: none; }
   }
 </style>
 </head>
@@ -169,6 +205,18 @@
     <div class="label">ÉTOILES</div>
     <div class="row" id="stars" role="img" aria-label="Deux étoiles"></div>
   </section>
+
+  <label class="mode">
+    <input type="checkbox" id="stats">
+    <span class="track" aria-hidden="true"></span>
+    <span>Mode statistiques</span>
+  </label>
+  <p class="mode-note" id="mode-note" hidden>
+    Tire au hasard parmi les numéros et étoiles les plus souvent sortis dans les tirages européens
+    depuis 2004 (statistiques indicatives, source tierce, arrêtées au 13/11/2026).
+    Cela change seulement les numéros proposés : chaque tirage officiel est indépendant,
+    ce mode n'augmente pas vos chances de gagner.
+  </p>
 
   <div class="grow"></div>
 
@@ -215,9 +263,24 @@
     do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
     return (buf[0] % max) + 1;
   }
-  function pickDistinct(count, max) {
+  // Nombre de sorties de chaque numéro (1 à 50) et de chaque étoile (1 à 12) depuis 2004,
+  // sur 1 997 tirages (source tierce : tirage-gagnant.com, relevé du 13/11/2026).
+  const COUNT_NUMBERS = [187,186,195,201,204,193,207,193,187,219,194,201,206,207,205,198,219,179,220,204,215,158,225,203,209,206,206,192,219,200,190,181,175,199,211,185,216,203,199,180,183,225,181,229,210,177,190,199,201,213];
+  const COUNT_STARS = [341,393,389,316,356,357,350,378,365,286,271,183];
+  // Les étoiles 10, 11 et 12 ont été ajoutées plus tard : leur total est donc plus bas.
+
+  // Mode statistiques : on garde la moitié la plus fréquente (25 numéros, 6 étoiles).
+  const topHalf = (counts) => counts
+    .map((c, i) => ({ n: i + 1, c }))
+    .sort((a, b) => b.c - a.c || a.n - b.n)
+    .slice(0, Math.floor(counts.length / 2))
+    .map((x) => x.n);
+  const POOL_NUMBERS = topHalf(COUNT_NUMBERS);
+  const POOL_STARS = topHalf(COUNT_STARS);
+
+  function pickDistinct(count, max, pool) {
     const set = new Set();
-    while (set.size < count) set.add(randInt(max));
+    while (set.size < count) set.add(pool ? pool[randInt(pool.length) - 1] : randInt(max));
     return [...set].sort((a, b) => a - b);
   }
 
@@ -240,7 +303,11 @@
     draw.disabled = true;
     buzz(15);
 
-    const result = [...pickDistinct(NUMBER_COUNT, NUMBER_MAX), ...pickDistinct(STAR_COUNT, STAR_MAX)];
+    const useStats = statsBox.checked;
+    const result = [
+      ...pickDistinct(NUMBER_COUNT, NUMBER_MAX, useStats ? POOL_NUMBERS : null),
+      ...pickDistinct(STAR_COUNT, STAR_MAX, useStats ? POOL_STARS : null)
+    ];
     const start = performance.now();
     let stopped = 0;
 
@@ -272,6 +339,17 @@
     $('live').textContent = 'Numéros : ' + nums + '. Étoiles : ' + stars + '.';
   }
   draw.addEventListener('click', startSpin);
+
+  // Interrupteur du mode statistiques (le choix est mémorisé sur l'appareil).
+  const statsBox = $('stats');
+  const note = $('mode-note');
+  const syncMode = () => { note.hidden = !statsBox.checked; };
+  try { statsBox.checked = localStorage.getItem('etoiles-stats') === '1'; } catch (_) {}
+  syncMode();
+  statsBox.addEventListener('change', () => {
+    syncMode();
+    try { localStorage.setItem('etoiles-stats', statsBox.checked ? '1' : '0'); } catch (_) {}
+  });
 
   // ---------------------------------------------------------- Installation
   const ua = navigator.userAgent || '';

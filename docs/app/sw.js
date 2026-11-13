@@ -1,6 +1,6 @@
 // Service worker : permet à l'application de s'ouvrir même sans connexion.
 // Pour publier une mise à jour, changez simplement le numéro de version ci-dessous.
-const VERSION = 'etoiles-dor-v1';
+const VERSION = 'etoiles-dor-v2';
 const FILES = [
   './',
   'index.html',
